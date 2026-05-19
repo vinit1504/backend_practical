@@ -12,7 +12,19 @@ interface JwtPayload {
 }
 
 export const protect = async (req: Request, res: Response, next: NextFunction) => {
-  const token = req.cookies.accessToken || req.headers.authorization?.split(' ')[1];
+  let token = req.cookies.accessToken;
+
+  if (!token && req.headers.authorization) {
+    if (req.headers.authorization.startsWith('Bearer ')) {
+      token = req.headers.authorization.split(' ')[1];
+    } else {
+      token = req.headers.authorization;
+    }
+  }
+
+  if (!token) {
+    token = (req.headers['x-access-token'] as string) || (req.headers['token'] as string);
+  }
 
   if (!token) {
     return res

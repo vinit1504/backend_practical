@@ -38,7 +38,17 @@ export class AuthController {
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     });
 
-    res.status(StatusCodes.OK).json({ success: true, message: MESSAGES.SUCCESS.LOGIN });
+    res.status(StatusCodes.OK).json({
+      success: true,
+      message: MESSAGES.SUCCESS.LOGIN,
+      user: {
+        id: user._id,
+        email: user.email,
+        role: user.role,
+      },
+      accessToken,
+      refreshToken,
+    });
   };
 
   static logout = async (req: Request, res: Response) => {
@@ -56,7 +66,22 @@ export class AuthController {
   };
 
   static refresh = async (req: Request, res: Response) => {
-    const refreshToken = req.cookies.refreshToken;
+    let refreshToken = req.cookies.refreshToken;
+
+    if (!refreshToken && req.headers.authorization) {
+      if (req.headers.authorization.startsWith('Bearer ')) {
+        refreshToken = req.headers.authorization.split(' ')[1];
+      } else {
+        refreshToken = req.headers.authorization;
+      }
+    }
+
+    if (!refreshToken) {
+      refreshToken =
+        (req.headers['x-refresh-token'] as string) ||
+        (req.headers['refresh-token'] as string);
+    }
+
     if (!refreshToken) {
       return res
         .status(StatusCodes.UNAUTHORIZED)
@@ -86,7 +111,12 @@ export class AuthController {
         maxAge: 7 * 24 * 60 * 60 * 1000,
       });
 
-      res.status(StatusCodes.OK).json({ success: true, message: 'Token refreshed successfully' });
+      res.status(StatusCodes.OK).json({
+        success: true,
+        message: 'Token refreshed successfully',
+        accessToken: newAccessToken,
+        refreshToken: newRefreshToken,
+      });
     } catch (error) {
       return res
         .status(StatusCodes.UNAUTHORIZED)
