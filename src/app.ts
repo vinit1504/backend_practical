@@ -152,7 +152,8 @@ app.use(errorHandler);
 // Local Development Boot
 // ========================
 
-const isVercel = process.env.VERCEL === '1';
+// Vercel sets `VERCEL` in the environment; treat presence as serverless deployment.
+const isVercel = !!process.env.VERCEL;
 
 if (!isVercel) {
   connectDb()
