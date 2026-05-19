@@ -6,21 +6,27 @@ const logFormat = winston.format.combine(
   winston.format.printf((info) => `${info.timestamp} ${info.level}: ${info.message}`),
 );
 
-const transport = new winston.transports.DailyRotateFile({
-  filename: 'logs/application-%DATE%.log',
-  datePattern: 'YYYY-MM-DD',
-  zippedArchive: true,
-  maxSize: '20m',
-  maxFiles: '14d',
-});
+const transports: winston.transport[] = [
+  new winston.transports.Console({
+    format: winston.format.combine(winston.format.colorize(), logFormat),
+  }),
+];
+
+// Do not attempt to write to file system in serverless (Vercel) environment
+if (process.env.VERCEL !== '1') {
+  transports.push(
+    new winston.transports.DailyRotateFile({
+      filename: 'logs/application-%DATE%.log',
+      datePattern: 'YYYY-MM-DD',
+      zippedArchive: true,
+      maxSize: '20m',
+      maxFiles: '14d',
+    }),
+  );
+}
 
 export const logger = winston.createLogger({
   level: process.env.NODE_ENV === 'development' ? 'debug' : 'info',
   format: logFormat,
-  transports: [
-    transport,
-    new winston.transports.Console({
-      format: winston.format.combine(winston.format.colorize(), logFormat),
-    }),
-  ],
+  transports,
 });
