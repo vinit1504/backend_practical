@@ -27,7 +27,9 @@ let isConnected = false;
 const connectDb = async () => {
   if (isConnected && mongoose.connection.readyState === 1) return;
   try {
-    await mongoose.connect(config.mongoUri);
+    await mongoose.connect(config.mongoUri, {
+      serverSelectionTimeoutMS: 5000, // Fail fast if DB is unreachable
+    });
     isConnected = true;
     logger.info('Connected to MongoDB successfully');
   } catch (error) {
@@ -35,8 +37,11 @@ const connectDb = async () => {
   }
 };
 
-// Ensure database is connected before processing requests
+// Ensure database is connected before processing requests, except for health and favicon
 app.use(async (req, res, next) => {
+  if (req.path === '/api/health' || req.path === '/favicon.ico') {
+    return next();
+  }
   await connectDb();
   next();
 });
