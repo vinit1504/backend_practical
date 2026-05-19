@@ -98,6 +98,19 @@ app.use(
   }),
 );
 
+// Ensure database is connected before processing requests, except for health and favicon
+app.use(async (req, res, next) => {
+  if (req.path === '/api/health' || req.path === '/favicon.ico') {
+    return next();
+  }
+  try {
+    await connectDb();
+    next();
+  } catch (error) {
+    next(error);
+  }
+});
+
 // ========================
 // Health Check
 // ========================
@@ -134,5 +147,23 @@ app.use('/api/export', exportRoutes);
 // ========================
 
 app.use(errorHandler);
+
+// ========================
+// Local Development Boot
+// ========================
+
+const isVercel = process.env.VERCEL === '1';
+
+if (!isVercel) {
+  connectDb()
+    .then(() => {
+      app.listen(config.port, () => {
+        logger.info(`Server running on port ${config.port} in ${config.nodeEnv} mode`);
+      });
+    })
+    .catch((error) => {
+      logger.error('Server startup failed:', error);
+    });
+}
 
 export default app;
