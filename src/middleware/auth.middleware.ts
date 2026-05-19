@@ -21,7 +21,7 @@ export const protect = async (req: Request, res: Response, next: NextFunction) =
   }
 
   try {
-    const decoded = jwt.verify(token, config.jwtSecret) as JwtPayload;
+    const decoded = jwt.verify(token, config.jwtSecret!) as unknown as JwtPayload;
 
     // Check if user still exists
     const user = await User.findById(decoded.id);

@@ -64,7 +64,7 @@ export class AuthController {
     }
 
     try {
-      const decoded = jwt.verify(refreshToken, config.jwtRefreshSecret) as {
+      const decoded = jwt.verify(refreshToken, config.jwtRefreshSecret!) as unknown as {
         id: string;
         role: UserRole;
       };
