@@ -24,7 +24,7 @@ const app = express();
 
 let isConnected = false;
 
-const connectDb = async () => {
+export const connectDb = async () => {
   if (isConnected && mongoose.connection.readyState === 1) return;
   try {
     await mongoose.connect(config.mongoUri, {
