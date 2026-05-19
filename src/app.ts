@@ -5,6 +5,8 @@ import mongoSanitize from 'express-mongo-sanitize';
 import rateLimit from 'express-rate-limit';
 import cookieParser from 'cookie-parser';
 import morgan from 'morgan';
+import mongoose from 'mongoose';
+import { config } from './config';
 import { logger } from './config/logger';
 
 // Import Routes
@@ -19,6 +21,25 @@ import exportRoutes from './routes/export.routes';
 import { errorHandler } from './middleware/error.middleware';
 
 const app = express();
+
+let isConnected = false;
+
+const connectDb = async () => {
+  if (isConnected && mongoose.connection.readyState === 1) return;
+  try {
+    await mongoose.connect(config.mongoUri);
+    isConnected = true;
+    logger.info('Connected to MongoDB successfully');
+  } catch (error) {
+    logger.error('Error connecting to MongoDB', error);
+  }
+};
+
+// Ensure database is connected before processing requests
+app.use(async (req, res, next) => {
+  await connectDb();
+  next();
+});
 
 // Middleware
 app.use(helmet());
