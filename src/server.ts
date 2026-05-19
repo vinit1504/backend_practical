@@ -3,18 +3,35 @@ import app from './app';
 import { config } from './config';
 import { logger } from './config/logger';
 
-const startServer = async () => {
+let isConnected = false;
+
+const connectDb = async () => {
+  if (isConnected && mongoose.connection.readyState === 1) return;
   try {
     await mongoose.connect(config.mongoUri);
+    isConnected = true;
     logger.info('Connected to MongoDB successfully');
-
-    app.listen(config.port, () => {
-      logger.info(`Server is running in ${config.nodeEnv} mode on port ${config.port}`);
-    });
   } catch (error) {
-    logger.error('Error starting server', error);
-    process.exit(1);
+    logger.error('Error connecting to MongoDB', error);
   }
 };
 
-startServer();
+// Check if running on Vercel serverless platform
+const isServerless = process.env.VERCEL === '1';
+
+if (!isServerless) {
+  // Local or standard server environment: start listening on PORT
+  connectDb().then(() => {
+    app.listen(config.port, () => {
+      logger.info(`Server is running in ${config.nodeEnv} mode on port ${config.port}`);
+    });
+  });
+} else {
+  // Serverless environment: handle DB connection per request
+  app.use(async (req, res, next) => {
+    await connectDb();
+    next();
+  });
+}
+
+export default app;
