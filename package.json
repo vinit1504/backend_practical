@@ -2,9 +2,9 @@
   "name": "workforce-pulse-backend",
   "version": "1.0.0",
   "description": "Production-ready backend for Workforce Pulse Analytics Dashboard",
-  "main": "dist/server.js",
+  "main": "dist/app.js",
   "scripts": {
-    "start": "node dist/server.js",
+    "start": "node dist/app.js",
     "dev": "nodemon",
     "build": "tsc",
     "lint": "eslint src/**/*.ts",
