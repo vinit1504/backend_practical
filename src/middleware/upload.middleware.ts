@@ -3,7 +3,9 @@ import path from 'path';
 import fs from 'fs';
 import { MESSAGES } from '../constants/messages';
 
-const uploadDir = 'uploads/';
+// Temporary folder for Vercel
+const uploadDir = '/tmp/uploads';
+
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }
@@ -12,6 +14,7 @@ const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, uploadDir);
   },
+
   filename: (req, file, cb) => {
     cb(null, `${file.fieldname}-${Date.now()}${path.extname(file.originalname)}`);
   },
@@ -19,6 +22,7 @@ const storage = multer.diskStorage({
 
 const fileFilter = (req: any, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
   const ext = path.extname(file.originalname).toLowerCase();
+
   if (ext === '.csv' || ext === '.json') {
     cb(null, true);
   } else {
@@ -29,5 +33,7 @@ const fileFilter = (req: any, file: Express.Multer.File, cb: multer.FileFilterCa
 export const upload = multer({
   storage,
   fileFilter,
-  limits: { fileSize: 50 * 1024 * 1024 }, // 50MB
+  limits: {
+    fileSize: 50 * 1024 * 1024, // 50MB
+  },
 });
